@@ -23,20 +23,84 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     var myTableview = UITableView()
     var cellID = "TableViewCell"
     
+    // Refresh control objects
+    let refreshControl = UIRefreshControl()
+    
     override func viewDidLoad() {
         
         super.viewDidLoad()
         
+        self.designSetup()
+        
+        homeAPICall()
+        
+        refreshControlSetUp()
+    }
+    
+    func homeAPICall()  {
+        
         ViewModelObj.apiCalling { (response) in
-
+            
             self.apiResponse = response
-
+            
             DispatchQueue.main.async {
-
+                
                 self.myTableview.reloadData()
             }
         }
-        self.designSetup()
+         self.refreshControl.endRefreshing()
+    }
+    
+    // MARK: UIRefreshControl Setup
+    
+    func refreshControlSetUp()  {
+        
+        // Add Refresh Control to Table View
+        if #available(iOS 10.0, *) {
+            
+            myTableview.refreshControl = refreshControl
+            
+        } else {
+            
+            myTableview.addSubview(refreshControl)
+        }
+        
+        refreshControl.attributedTitle = NSAttributedString(string: "Refreshing Page ...", attributes: [NSAttributedString.Key.foregroundColor: UIColor.red, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14)])
+        //
+        
+        refreshControl.tintColor = UIColor.gray
+        
+        refreshControl.addTarget(self, action: #selector(refreshHomeData(_:)), for: .valueChanged)
+        
+        // Background Color
+        let backgroundColor = UIColor.darkGray
+        
+        // Creating refresh control
+        refreshControl.backgroundColor = UIColor.white
+        
+        // Creating view for extending background color
+        var frame = myTableview.bounds
+        
+        frame.origin.y = -frame.size.height
+        
+        let backgroundView = UIView(frame: frame)
+        
+        backgroundView.autoresizingMask = .flexibleWidth
+        
+        backgroundView.backgroundColor = backgroundColor
+        
+        // Adding the view below the refresh control
+        myTableview.insertSubview(backgroundView, at: 0)
+        
+    }
+    
+    // MARK: PullToRefresh Function
+    
+    @objc private func refreshHomeData(_ sender: Any) {
+        // Fetch Weather Data
+        
+        self.homeAPICall()
+        
     }
     
     func designSetup() -> Void {
